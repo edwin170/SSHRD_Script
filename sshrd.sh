@@ -32,15 +32,15 @@ ERR_HANDLER () {
 
 trap ERR_HANDLER EXIT
 
-#if [ ! -e sshtars/README.md ]; then
+#if [ ! -e mysshtars/README.md ]; then
 #    git submodule update --init --recursive
 #fi
 
-if [ -e sshtars/ssh.tar.gz ]; then
+if [ -e mysshtars/ssh.tar.gz ]; then
     if [ "$oscheck" = 'Linux' ]; then
-        gzip -d sshtars/ssh.tar.gz
-        gzip -d sshtars/t2ssh.tar.gz
-        gzip -d sshtars/atvssh.tar.gz
+        gzip -d mysshtars/ssh.tar.gz
+        gzip -d mysshtars/t2ssh.tar.gz
+        gzip -d mysshtars/atvssh.tar.gz
     fi
 fi
 
@@ -289,9 +289,9 @@ if [ "$oscheck" = 'Darwin' ]; then
     fi
     
     if [ "$replace" = 'j42dap' ]; then
-        "$oscheck"/gtar -x --no-overwrite-dir -f sshtars/atvssh.tar.gz -C /tmp/SSHRD/
+        "$oscheck"/gtar -x --no-overwrite-dir -f mysshtars/atvssh.tar.gz -C /tmp/SSHRD/
     elif [ "$check" = '0x8012' ]; then
-        "$oscheck"/gtar -x --no-overwrite-dir -f sshtars/t2ssh.tar.gz -C /tmp/SSHRD/
+        "$oscheck"/gtar -x --no-overwrite-dir -f mysshtars/t2ssh.tar.gz -C /tmp/SSHRD/
         echo "[!] WARNING: T2 MIGHT HANG AND DO NOTHING WHEN BOOTING THE RAMDISK!"
     else
     if [ "$major" -lt 11 ] || ([ "$major" -eq 11 ] && ([ "$minor" -lt 4 ] || [ "$minor" -eq 4 ] && [ "$patch" -le 1 ])); then
@@ -313,7 +313,7 @@ if [ "$oscheck" = 'Darwin' ]; then
     else
         :
             fi
-        "$oscheck"/gtar -x --no-overwrite-dir -f sshtars/ssh.tar.gz -C /tmp/SSHRD/
+        "$oscheck"/gtar -x --no-overwrite-dir -f mysshtars/ssh.tar.gz -C /tmp/SSHRD/
     fi
 
     hdiutil detach -force /tmp/SSHRD
@@ -332,9 +332,9 @@ else
     "$oscheck"/hfsplus work/ramdisk.dmg grow 220000000 > /dev/null
 
     if [ "$replace" = 'j42dap' ]; then
-        "$oscheck"/hfsplus work/ramdisk.dmg untar sshtars/atvssh.tar > /dev/null
+        "$oscheck"/hfsplus work/ramdisk.dmg untar mysshtars/atvssh.tar > /dev/null
     elif [ "$check" = '0x8012' ]; then
-        "$oscheck"/hfsplus work/ramdisk.dmg untar sshtars/t2ssh.tar > /dev/null
+        "$oscheck"/hfsplus work/ramdisk.dmg untar mysshtars/t2ssh.tar > /dev/null
         echo "[!] WARNING: T2 MIGHT HANG AND DO NOTHING WHEN BOOTING THE RAMDISK!"
     else
     if [ "$major" -lt 11 ] || ([ "$major" -eq 11 ] && ([ "$minor" -lt 4 ] || [ "$minor" -eq 4 ] && [ "$patch" -le 1 ])); then
@@ -353,7 +353,7 @@ else
     else
     :
         fi
-        "$oscheck"/hfsplus work/ramdisk.dmg untar sshtars/ssh.tar > /dev/null
+        "$oscheck"/hfsplus work/ramdisk.dmg untar mysshtars/ssh.tar > /dev/null
     fi
     if [ -d "other/trollstore/" ]; then 
         "$oscheck"/hfsplus work/ramdisk.dmg addall other/trollstore > /dev/null
