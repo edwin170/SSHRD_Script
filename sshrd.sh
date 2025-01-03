@@ -115,6 +115,7 @@ if [ -e 12rd ]; then
 fi
 
 mkdir -p boot/
+mkdir -p boot/${deviceid}
 
 if [ "$1" = 'reset' ]; then
     if [ ! -e boot/${deviceid}/iBSS.img4 ]; then
