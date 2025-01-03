@@ -15,22 +15,6 @@ patch=$(echo "$version" | awk -F. '{print $3}')
 major=${major:-0}
 minor=${minor:-0}
 patch=${patch:-0}
-    
-ERR_HANDLER () {
-    [ $? -eq 0 ] && exit
-    echo "[-] An error occurred"
-    rm -rf work 12rd | true
-    killall iproxy 2>/dev/null | true
-
-    # echo "[-] Uploading logs. If this fails, it's not a big deal."
-    for file in logs/*.log; do
-        mv "$file" logs/FAILURE_${file##*/}
-    done
-    #curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
-    # echo "[!] Done uploading logs, I'll be sure to look at them and fix the issue you are facing"
-}
-
-trap ERR_HANDLER EXIT
 
 #if [ ! -e mysshtars/README.md ]; then
 #    git submodule update --init --recursive
@@ -200,7 +184,7 @@ if [ "$1" = 'boot' ]; then
 fi
 
 if [ ! -e boot/${deviceid} ]; then
-    mkdir boot/${deviceid}
+    mkdir "boot/$deviceid"
 fi
 
 if [ -e boot/${deviceid}/iBSS.img4 ]; then
@@ -383,15 +367,6 @@ fi
 echo ""
 echo "[*] Cleaning up work directory"
 rm -rf work 12rd
-
- # echo "[*] Uploading logs. If this fails, your ramdisk is still created."
- set +e
- for file in logs/*.log; do
-    mv "$file" logs/SUCCESS_${file##*/}
- done
- #curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
- set -e
- # echo "[*] Done uploading logs!"
 
 echo ""
 echo "[*] Finished! Please use ./sshrd.sh boot to boot your device"
