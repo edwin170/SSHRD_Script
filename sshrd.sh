@@ -26,15 +26,15 @@ ERR_HANDLER () {
     for file in logs/*.log; do
         mv "$file" logs/FAILURE_${file##*/}
     done
-    curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
+    #curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
     # echo "[!] Done uploading logs, I'll be sure to look at them and fix the issue you are facing"
 }
 
 trap ERR_HANDLER EXIT
 
-if [ ! -e sshtars/README.md ]; then
-    git submodule update --init --recursive
-fi
+#if [ ! -e sshtars/README.md ]; then
+#    git submodule update --init --recursive
+#fi
 
 if [ -e sshtars/ssh.tar.gz ]; then
     if [ "$oscheck" = 'Linux' ]; then
@@ -44,17 +44,17 @@ if [ -e sshtars/ssh.tar.gz ]; then
     fi
 fi
 
-if [ ! -e "$oscheck"/gaster ]; then
-    curl -sLO https://nightly.link/verygenericname/gaster/workflows/makefile/main/gaster-"$oscheck".zip
-    unzip gaster-"$oscheck".zip
-    mv gaster "$oscheck"/
-    rm -rf gaster gaster-"$oscheck".zip
-fi
+#if [ ! -e "$oscheck"/gaster ]; then
+#    curl -sLO https://nightly.link/verygenericname/gaster/workflows/makefile/main/gaster-"$oscheck".zip
+#    unzip gaster-"$oscheck".zip
+#    mv gaster "$oscheck"/
+#    rm -rf gaster gaster-"$oscheck".zip
+#fi
 
 chmod +x "$oscheck"/*
 
 if [ "$1" = 'clean' ]; then
-    rm -rf sshramdisk work
+    rm -rf boot/${deviceid} work
     echo "[*] Removed the current created SSH ramdisk"
     exit
 elif [ "$1" = 'dump-blobs' ]; then
@@ -114,12 +114,10 @@ if [ -e 12rd ]; then
     rm -rf 12rd
 fi
 
-if [ ! -e sshramdisk ]; then
-    mkdir sshramdisk
-fi
+mkdir -p boot/
 
 if [ "$1" = 'reset' ]; then
-    if [ ! -e sshramdisk/iBSS.img4 ]; then
+    if [ ! -e boot/${deviceid}/iBSS.img4 ]; then
         echo "[-] Please create an SSH ramdisk first!"
         exit
     fi
@@ -130,9 +128,9 @@ if [ "$1" = 'reset' ]; then
         "$oscheck"/gaster pwn > /dev/null
     fi
     "$oscheck"/gaster reset > /dev/null
-    "$oscheck"/irecovery -f sshramdisk/iBSS.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/iBSS.img4
     sleep 2
-    "$oscheck"/irecovery -f sshramdisk/iBEC.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/iBEC.img4
 
     if [ "$check" = '0x8010' ] || [ "$check" = '0x8015' ] || [ "$check" = '0x8011' ] || [ "$check" = '0x8012' ]; then
         "$oscheck"/irecovery -c go
@@ -155,14 +153,14 @@ if [ "$2" = 'TrollStore' ]; then
 fi
 
 if [ "$1" = 'boot' ]; then
-    if [ ! -e sshramdisk/iBSS.img4 ]; then
+    if [ ! -e boot/${deviceid}/iBSS.img4 ]; then
         echo "[-] Please create an SSH ramdisk first!"
         exit
     fi
 
-    major=$(cat sshramdisk/version.txt | awk -F. '{print $1}')
-    minor=$(cat sshramdisk/version.txt | awk -F. '{print $2}')
-    patch=$(cat sshramdisk/version.txt | awk -F. '{print $3}')
+    major=$(cat boot/${deviceid}/version.txt | awk -F. '{print $1}')
+    minor=$(cat boot/${deviceid}/version.txt | awk -F. '{print $2}')
+    patch=$(cat boot/${deviceid}/version.txt | awk -F. '{print $3}')
     major=${major:-0}
     minor=${minor:-0}
     patch=${patch:-0}
@@ -173,27 +171,27 @@ if [ "$1" = 'boot' ]; then
         "$oscheck"/gaster pwn > /dev/null
     fi
     "$oscheck"/gaster reset > /dev/null
-    "$oscheck"/irecovery -f sshramdisk/iBSS.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/iBSS.img4
     sleep 2
-    "$oscheck"/irecovery -f sshramdisk/iBEC.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/iBEC.img4
 
     if [ "$check" = '0x8010' ] || [ "$check" = '0x8015' ] || [ "$check" = '0x8011' ] || [ "$check" = '0x8012' ]; then
         "$oscheck"/irecovery -c go
     fi
     sleep 2
-    "$oscheck"/irecovery -f sshramdisk/logo.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/logo.img4
     "$oscheck"/irecovery -c "setpicture 0x1"
-    "$oscheck"/irecovery -f sshramdisk/ramdisk.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/ramdisk.img4
     "$oscheck"/irecovery -c ramdisk
-    "$oscheck"/irecovery -f sshramdisk/devicetree.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/devicetree.img4
     "$oscheck"/irecovery -c devicetree
     if [ "$major" -lt 11 ] || ([ "$major" -eq 11 ] && ([ "$minor" -lt 4 ] || [ "$minor" -eq 4 ] && [ "$patch" -le 1 ] || [ "$check" != '0x8012' ])); then
     :
     else
-    "$oscheck"/irecovery -f sshramdisk/trustcache.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/trustcache.img4
     "$oscheck"/irecovery -c firmware
     fi
-    "$oscheck"/irecovery -f sshramdisk/kernelcache.img4
+    "$oscheck"/irecovery -f boot/${deviceid}/kernelcache.img4
     "$oscheck"/irecovery -c bootx
 
     echo "[*] Device should now show text on screen"
@@ -244,28 +242,28 @@ cd ..
 "$oscheck"/gaster decrypt work/"$(awk "/""${replace}""/{x=1}x&&/iBSS[.]/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | sed 's/Firmware[/]dfu[/]//')" work/iBSS.dec
 "$oscheck"/gaster decrypt work/"$(awk "/""${replace}""/{x=1}x&&/iBEC[.]/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | sed 's/Firmware[/]dfu[/]//')" work/iBEC.dec
 "$oscheck"/iBoot64Patcher work/iBSS.dec work/iBSS.patched
-"$oscheck"/img4 -i work/iBSS.patched -o sshramdisk/iBSS.img4 -M work/IM4M -A -T ibss
+"$oscheck"/img4 -i work/iBSS.patched -o boot/${deviceid}/iBSS.img4 -M work/IM4M -A -T ibss
 "$oscheck"/iBoot64Patcher work/iBEC.dec work/iBEC.patched -b "rd=md0 debug=0x2014e -v wdt=-1 `if [ -z "$2" ]; then :; else echo "$2=$3"; fi` `if [ "$check" = '0x8960' ] || [ "$check" = '0x7000' ] || [ "$check" = '0x7001' ]; then echo "nand-enable-reformat=1 -restore"; fi`" -n
-"$oscheck"/img4 -i work/iBEC.patched -o sshramdisk/iBEC.img4 -M work/IM4M -A -T ibec
+"$oscheck"/img4 -i work/iBEC.patched -o boot/${deviceid}/iBEC.img4 -M work/IM4M -A -T ibec
 
 "$oscheck"/img4 -i work/"$(awk "/""${replace}""/{x=1}x&&/kernelcache.release/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1)" -o work/kcache.raw
 "$oscheck"/KPlooshFinder work/kcache.raw work/kcache.patched
 "$oscheck"/kerneldiff work/kcache.raw work/kcache.patched work/kc.bpatch
-"$oscheck"/img4 -i work/"$(awk "/""${replace}""/{x=1}x&&/kernelcache.release/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1)" -o sshramdisk/kernelcache.img4 -M work/IM4M -T rkrn -P work/kc.bpatch `if [ "$oscheck" = 'Linux' ]; then echo "-J"; fi`
-"$oscheck"/img4 -i work/"$(awk "/""${replace}""/{x=1}x&&/DeviceTree[.]/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | sed 's/Firmware[/]all_flash[/]//')" -o sshramdisk/devicetree.img4 -M work/IM4M -T rdtr
+"$oscheck"/img4 -i work/"$(awk "/""${replace}""/{x=1}x&&/kernelcache.release/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1)" -o boot/${deviceid}/kernelcache.img4 -M work/IM4M -T rkrn -P work/kc.bpatch `if [ "$oscheck" = 'Linux' ]; then echo "-J"; fi`
+"$oscheck"/img4 -i work/"$(awk "/""${replace}""/{x=1}x&&/DeviceTree[.]/{print;exit}" work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | sed 's/Firmware[/]all_flash[/]//')" -o boot/${deviceid}/devicetree.img4 -M work/IM4M -T rdtr
 
 if [ "$oscheck" = 'Darwin' ]; then
     if [ "$major" -lt 11 ] || ([ "$major" -eq 11 ] && ([ "$minor" -lt 4 ] || [ "$minor" -eq 4 ] && [ "$patch" -le 1 ] || [ "$check" != '0x8012' ])); then
         :
         else
-        "$oscheck"/img4 -i work/"$(/usr/bin/plutil -extract "BuildIdentities".0."Manifest"."RestoreRamDisk"."Info"."Path" xml1 -o - work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | head -1)".trustcache -o sshramdisk/trustcache.img4 -M work/IM4M -T rtsc
+        "$oscheck"/img4 -i work/"$(/usr/bin/plutil -extract "BuildIdentities".0."Manifest"."RestoreRamDisk"."Info"."Path" xml1 -o - work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | head -1)".trustcache -o boot/${deviceid}/trustcache.img4 -M work/IM4M -T rtsc
     fi
     "$oscheck"/img4 -i work/"$(/usr/bin/plutil -extract "BuildIdentities".0."Manifest"."RestoreRamDisk"."Info"."Path" xml1 -o - work/BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | head -1)" -o work/ramdisk.dmg
 else
     if [ "$major" -lt 11 ] || ([ "$major" -eq 11 ] && ([ "$minor" -lt 4 ] || [ "$minor" -eq 4 ] && [ "$patch" -le 1 ] || [ "$check" != '0x8012' ])); then
     :
     else
-    "$oscheck"/img4 -i work/"$(Linux/PlistBuddy work/BuildManifest.plist -c "Print BuildIdentities:0:Manifest:RestoreRamDisk:Info:Path" | sed 's/"//g')".trustcache -o sshramdisk/trustcache.img4 -M work/IM4M -T rtsc
+    "$oscheck"/img4 -i work/"$(Linux/PlistBuddy work/BuildManifest.plist -c "Print BuildIdentities:0:Manifest:RestoreRamDisk:Info:Path" | sed 's/"//g')".trustcache -o boot/${deviceid}/trustcache.img4 -M work/IM4M -T rtsc
     fi
     "$oscheck"/img4 -i work/"$(Linux/PlistBuddy work/BuildManifest.plist -c "Print BuildIdentities:0:Manifest:RestoreRamDisk:Info:Path" | sed 's/"//g')" -o work/ramdisk.dmg
 fi
@@ -274,14 +272,18 @@ if [ "$oscheck" = 'Darwin' ]; then
     if [ "$major" -gt 16 ] || ([ "$major" -eq 16 ] && ([ "$minor" -gt 1 ] || [ "$minor" -eq 1 ] && [ "$patch" -ge 0 ])); then
     :
     else
-        hdiutil resize -size 210MB work/ramdisk.dmg
+        hdiutil resize -size 220MB work/ramdisk.dmg
     fi
     hdiutil attach -mountpoint /tmp/SSHRD work/ramdisk.dmg -owners off
-    
+
     if [ "$major" -gt 16 ] || ([ "$major" -eq 16 ] && ([ "$minor" -gt 1 ] || [ "$minor" -eq 1 ] && [ "$patch" -ge 0 ])); then
-        hdiutil create -size 210m -imagekey diskimage-class=CRawDiskImage -format UDZO -fs HFS+ -layout NONE -srcfolder /tmp/SSHRD -copyuid root work/ramdisk1.dmg
+        hdiutil create -size 220m -imagekey diskimage-class=CRawDiskImage -format UDZO -fs HFS+ -layout NONE -srcfolder /tmp/SSHRD -copyuid root work/ramdisk1.dmg
         hdiutil detach -force /tmp/SSHRD
         hdiutil attach -mountpoint /tmp/SSHRD work/ramdisk1.dmg -owners off
+        if [ -d "other/trollstore/" ]; then 
+            cp -rv other/trollstore/ /tmp/SSHRD/
+        fi
+
     else
     :
     fi
@@ -300,6 +302,10 @@ if [ "$oscheck" = 'Darwin' ]; then
         ../"$oscheck"/pzb -g "$(/usr/bin/plutil -extract "BuildIdentities".0."Manifest"."RestoreRamDisk"."Info"."Path" xml1 -o - BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | head -1)" "$ipswurl12"
                 ../"$oscheck"/img4 -i "$(/usr/bin/plutil -extract "BuildIdentities".0."Manifest"."RestoreRamDisk"."Info"."Path" xml1 -o - BuildManifest.plist | grep '<string>' |cut -d\> -f2 |cut -d\< -f1 | head -1)" -o ramdisk.dmg
         hdiutil attach -mountpoint /tmp/12rd ramdisk.dmg -owners off
+        if [ -d "other/trollstore/" ]; then 
+            cp -rv other/trollstore/ /tmp/SSHRD/
+        fi
+        
         cp /tmp/12rd/usr/lib/libiconv.2.dylib /tmp/12rd/usr/lib/libcharset.1.dylib /tmp/SSHRD/usr/lib/
         hdiutil detach -force /tmp/12rd
         cd ..
@@ -323,7 +329,7 @@ else
         else
         :
         fi
-    "$oscheck"/hfsplus work/ramdisk.dmg grow 210000000 > /dev/null
+    "$oscheck"/hfsplus work/ramdisk.dmg grow 220000000 > /dev/null
 
     if [ "$replace" = 'j42dap' ]; then
         "$oscheck"/hfsplus work/ramdisk.dmg untar sshtars/atvssh.tar > /dev/null
@@ -349,17 +355,21 @@ else
         fi
         "$oscheck"/hfsplus work/ramdisk.dmg untar sshtars/ssh.tar > /dev/null
     fi
+    if [ -d "other/trollstore/" ]; then 
+        "$oscheck"/hfsplus work/ramdisk.dmg addall other/trollstore > /dev/null
+    fi
 fi
+
 if [ "$oscheck" = 'Darwin' ]; then
 if [ "$major" -gt 16 ] || ([ "$major" -eq 16 ] && ([ "$minor" -gt 1 ] || [ "$minor" -eq 1 ] && [ "$patch" -ge 0 ])); then
-"$oscheck"/img4 -i work/ramdisk1.dmg -o sshramdisk/ramdisk.img4 -M work/IM4M -A -T rdsk
+"$oscheck"/img4 -i work/ramdisk1.dmg -o boot/${deviceid}/ramdisk.img4 -M work/IM4M -A -T rdsk
 else
-"$oscheck"/img4 -i work/ramdisk.dmg -o sshramdisk/ramdisk.img4 -M work/IM4M -A -T rdsk
+"$oscheck"/img4 -i work/ramdisk.dmg -o boot/${deviceid}/ramdisk.img4 -M work/IM4M -A -T rdsk
 fi
 else
-"$oscheck"/img4 -i work/ramdisk.dmg -o sshramdisk/ramdisk.img4 -M work/IM4M -A -T rdsk
+"$oscheck"/img4 -i work/ramdisk.dmg -o boot/${deviceid}/ramdisk.img4 -M work/IM4M -A -T rdsk
 fi
-"$oscheck"/img4 -i other/bootlogo.im4p -o sshramdisk/logo.img4 -M work/IM4M -A -T rlgo
+"$oscheck"/img4 -i other/bootlogo.im4p -o boot/${deviceid}/logo.img4 -M work/IM4M -A -T rlgo
 echo ""
 echo "[*] Cleaning up work directory"
 rm -rf work 12rd
@@ -369,12 +379,12 @@ rm -rf work 12rd
  for file in logs/*.log; do
     mv "$file" logs/SUCCESS_${file##*/}
  done
- curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
+ #curl -A SSHRD_Script -F "fileToUpload=@$(ls logs/*.log)" https://nathan4s.lol/SSHRD_Script/log_upload.php > /dev/null 2>&1 | true
  set -e
  # echo "[*] Done uploading logs!"
 
 echo ""
 echo "[*] Finished! Please use ./sshrd.sh boot to boot your device"
-echo $1 > sshramdisk/version.txt
+echo $1 > boot/${deviceid}/version.txt
 
  } | tee logs/"$(date +%T)"-"$(date +%F)"-"$(uname)"-"$(uname -r)".log
