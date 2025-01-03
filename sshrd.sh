@@ -199,6 +199,15 @@ if [ "$1" = 'boot' ]; then
     exit
 fi
 
+if [ ! -e boot/${deviceid} ]; then
+    mkdir boot/${deviceid}
+fi
+
+if [ -e boot/${deviceid}/iBSS.img4 ]; then
+    echo "[-] Ramdisk is already created so SKIPPING ..."
+    exit
+fi
+
 if [ -z "$1" ]; then
     printf "1st argument: iOS version for the ramdisk\nExtra arguments:\nreset: wipes the device, without losing version.\nTrollStore: install trollstore to system app\n"
     exit
